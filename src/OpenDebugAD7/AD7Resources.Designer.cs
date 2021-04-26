@@ -135,6 +135,69 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because frames could not be retrieved..
+        /// </summary>
+        internal static string Error_InterpolateMissingFrames {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingFrames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because current thread is missing..
+        /// </summary>
+        internal static string Error_InterpolateMissingThread {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingThread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to interpolate logMessage because there is no top frame..
+        /// </summary>
+        internal static string Error_InterpolateMissingTopFrame {
+            get {
+                return ResourceManager.GetString("Error_InterpolateMissingTopFrame", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to evaluate expression..
+        /// </summary>
+        internal static string Error_InterpolateVariableEvaluateFailed {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableEvaluateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get context from frame..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingContext {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingContext", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No expression object found..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingExpressionObject {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingExpressionObject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get property information..
+        /// </summary>
+        internal static string Error_InterpolateVariableMissingProperties {
+            get {
+                return ResourceManager.GetString("Error_InterpolateVariableMissingProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
@@ -160,6 +223,24 @@ namespace OpenDebugAD7 {
         internal static string Error_MissingOutParam {
             get {
                 return ResourceManager.GetString("Error_MissingOutParam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set next statement is not supported by the current debugger..
+        /// </summary>
+        internal static string Error_NotImplementedSetNextStatement {
+            get {
+                return ResourceManager.GetString("Error_NotImplementedSetNextStatement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: property &apos;{1}&apos; is invalid..
+        /// </summary>
+        internal static string Error_PropertyInvalid {
+            get {
+                return ResourceManager.GetString("Error_PropertyInvalid", resourceCulture);
             }
         }
         
@@ -191,6 +272,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to disassemble. {0}.
+        /// </summary>
+        internal static string Error_Scenario_Disassemble {
+            get {
+                return ResourceManager.GetString("Error_Scenario_Disassemble", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to evaluate expression. {0}.
         /// </summary>
         internal static string Error_Scenario_Evaluate {
@@ -205,6 +295,24 @@ namespace OpenDebugAD7 {
         internal static string Error_Scenario_Launch {
             get {
                 return ResourceManager.GetString("Error_Scenario_Launch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to read memory. {0}.
+        /// </summary>
+        internal static string Error_Scenario_ReadMemory {
+            get {
+                return ResourceManager.GetString("Error_Scenario_ReadMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to retrieve stack trace. {0}.
+        /// </summary>
+        internal static string Error_Scenario_StackTrace {
+            get {
+                return ResourceManager.GetString("Error_Scenario_StackTrace", resourceCulture);
             }
         }
         
@@ -277,6 +385,15 @@ namespace OpenDebugAD7 {
         internal static string Error_TargetNotStopped {
             get {
                 return ResourceManager.GetString("Error_TargetNotStopped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse &apos;logMessage&apos;..
+        /// </summary>
+        internal static string Error_UnableToParseLogMessage {
+            get {
+                return ResourceManager.GetString("Error_UnableToParseLogMessage", resourceCulture);
             }
         }
         
@@ -413,6 +530,15 @@ namespace OpenDebugAD7 {
         internal static string ProcessExitMessage {
             get {
                 return ResourceManager.GetString("ProcessExitMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Registers.
+        /// </summary>
+        internal static string Registers_Scope_Name {
+            get {
+                return ResourceManager.GetString("Registers_Scope_Name", resourceCulture);
             }
         }
         

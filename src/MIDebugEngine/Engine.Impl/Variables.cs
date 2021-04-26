@@ -1,18 +1,15 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using MICore;
+using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Debugger.Interop.DAP;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using Microsoft.VisualStudio.Debugger.Interop;
-using System.Collections;
 using System.Diagnostics;
-using System.Threading;
-using MICore;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using System.Globalization;
-using Microsoft.VisualStudio.Debugger.Interop.DAP;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Microsoft.MIDebugEngine
 {
@@ -41,6 +38,8 @@ namespace Microsoft.MIDebugEngine
         bool IsReadOnly();
         enum_DEBUGPROP_INFO_FLAGS PropertyInfoFlags { get; set; }
         bool IsPreformatted { get; set; }
+        string Address();
+        uint Size();
     }
 
     internal class SimpleVariableInformation
@@ -60,7 +59,7 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<VariableInformation> CreateMIDebuggerVariable(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
-            VariableInformation vi = new VariableInformation(Name, ctx, engine, thread, IsParameter);
+            VariableInformation vi = new VariableInformation(Name, Name, ctx, engine, thread, IsParameter);
             await vi.Eval();
             return vi;
         }
@@ -73,7 +72,7 @@ namespace Microsoft.MIDebugEngine
         { }
     }
 
-    internal class VariableInformation : IVariableInformation
+    internal sealed class VariableInformation : IVariableInformation
     {
         public string Name { get; private set; }
         public string Value { get; private set; }
@@ -90,6 +89,28 @@ namespace Microsoft.MIDebugEngine
         private string DisplayHint { get; set; }
         public bool IsPreformatted { get; set; }
 
+        static readonly Lazy<Regex> s_addressPattern = new Lazy<Regex>(() => new Regex(@"^(0x[0-9a-fA-F]+)\b"));
+
+        public string Address()
+        {
+            // ask GDB to evaluate "&expression"
+            string command = "&("+FullName()+")";
+            var result = EvalDependentExpression(command);
+            Match m = s_addressPattern.Value.Match(result);
+            if (m.Success)
+            {
+                return m.Captures[0].ToString();
+            }
+            string errorMessage = String.Format(CultureInfo.InvariantCulture, "Unexpected result {0} from evaluating {1}", result, command);
+            throw new UnexpectedMIResultException(_debuggedProcess.MICommandFactory.Name, "-data-evaluate-expression", errorMessage);
+        }
+
+        public uint Size()
+        {
+            // ask GDB to evaluate "sizeof(expression)"
+            string command = "sizeof("+FullName()+")";
+            return Convert.ToUInt32(EvalDependentExpression(command), CultureInfo.InvariantCulture);
+        }
 
         private static bool IsPointer(string typeName)
         {
@@ -128,6 +149,9 @@ namespace Microsoft.MIDebugEngine
                         }
                         _fullname = '(' + parentName + ')' + op + _strippedName;
                         break;
+                    case NodeType.Dereference:
+                        _fullname = "*(" + _parent.FullName() + ")";
+                        break;
                     case NodeType.BaseClass:
                     case NodeType.AccessQualifier:
                         _fullname = _parent.FullName();
@@ -164,11 +188,6 @@ namespace Microsoft.MIDebugEngine
             }
         }
 
-        static VariableInformation()
-        {
-            s_isFunction = new Regex(@".+\(.*\).*");
-        }
-
         private VariableInformation(ThreadContext ctx, AD7Engine engine, AD7Thread thread)
         {
             _engine = engine;
@@ -190,12 +209,12 @@ namespace Microsoft.MIDebugEngine
         }
 
         //this constructor is used to create root nodes (local/params)
-        internal VariableInformation(string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
+        internal VariableInformation(string displayName, string expr, ThreadContext ctx, AD7Engine engine, AD7Thread thread, bool isParameter = false)
             : this(ctx, engine, thread)
         {
             // strip off formatting string
             _strippedName = StripFormatSpecifier(expr, out _format);
-            Name = expr;
+            Name = displayName;
             IsParameter = isParameter;
             _parent = null;
             VariableNodeType = NodeType.Root;
@@ -274,6 +293,10 @@ namespace Microsoft.MIDebugEngine
             {
                 VariableNodeType = NodeType.AnonymousUnion;
             }
+            else if (Name.Length > 1 && Name[0] == '*')
+            {
+                VariableNodeType = NodeType.Dereference;
+            }
             else
             {
                 _strippedName = Name;
@@ -323,6 +346,7 @@ namespace Microsoft.MIDebugEngine
         {
             Root,
             Field,
+            Dereference,
             ArrayElement,
             BaseClass,
             AccessQualifier,
@@ -339,27 +363,74 @@ namespace Microsoft.MIDebugEngine
                                  @"^const +char *\[[0-9]*\]$"
                              };
 
-        private static Regex s_isFunction;
+        private static Regex s_isFunction = new Regex(@".+\(.*\).*");
 
         private string StripFormatSpecifier(string exp, out string formatSpecifier)
         {
-            formatSpecifier = null;
+            formatSpecifier = null; // will be used with -var-set-format
             int lastComma = exp.LastIndexOf(',');
-            if (lastComma > 0)
+            if (lastComma <= 0)
+                return exp;
+
+            // https://docs.microsoft.com/en-us/visualstudio/debugger/format-specifiers-in-cpp
+            string expFS = exp.Substring(lastComma + 1);
+            string trimmed = expFS.Trim();
+            switch (trimmed)
             {
-                string expFS = exp.Substring(lastComma + 1);
-                string trimmed = expFS.Trim();
-                if (trimmed == "x" || trimmed == "X" || trimmed == "h" || trimmed == "H")
-                {
-                    formatSpecifier = "hexadecimal";
-                    return exp.Substring(0, lastComma);
-                }
-                else if (trimmed == "o")
-                {
+                case "x":
+                case "X":
+                case "h":
+                case "H":
+                case "xb":
+                case "Xb":
+                case "hb":
+                case "Hb":
+                    // could be improved upon via post-processing with ToUpperInvariant/SubString
+                    formatSpecifier = "zero-hexadecimal";
+                    goto case "";
+                case "o":
                     formatSpecifier = "octal";
+                    goto case "";
+                case "d":
+                    formatSpecifier = "decimal";
+                    goto case "";
+                case "b":
+                case "bb":
+                    formatSpecifier = "binary";
+                    goto case "";
+                case "e":
+                case "g":
+                    goto case "";
+                case "s":
+                case "sb":
+                case "s8":
+                case "s8b":
+                    return "(const char*)(" + exp.Substring(0, lastComma) + ")";
+                case "su":
+                case "sub":
+                    return "(const char16_t*)(" + exp.Substring(0, lastComma) + ")";
+                case "c":
+                    return "(char)(" + exp.Substring(0, lastComma) + ")";
+                // just remove and ignore these
+                case "en":
+                case "na":
+                case "nd":
+                case "nr":
+                case "!":
+                case "":
                     return exp.Substring(0, lastComma);
-                }
             }
+
+            // array with static size
+            // TODO: could return '(T(*)[n])(exp)' but requires T
+            var m = Regex.Match(trimmed, @"^\[?(\d+)\]?$");
+            if (m.Success)
+                return exp.Substring(0, lastComma);
+
+            // array with dynamic size
+            if (Regex.Match(trimmed, @"^\[([a-zA-Z_][a-zA-Z_\d]*)\]$").Success)
+                return exp.Substring(0, lastComma);
+
             return exp;
         }
 
@@ -519,7 +590,7 @@ namespace Microsoft.MIDebugEngine
                             _attribsFetched = true;
                         }
                         Value = results.TryFindString("value");
-                        if ((Value == String.Empty || _format != null) && !string.IsNullOrEmpty(_internalName))
+                        if ((string.IsNullOrEmpty(Value) || _format != null) && !string.IsNullOrEmpty(_internalName))
                         {
                             if (_format != null)
                             {
@@ -571,7 +642,7 @@ namespace Microsoft.MIDebugEngine
                 else
                     message = e.Message;
 
-                SetAsError(string.Format(ResourceStrings.Failed_ExecCommandError, message));
+                SetAsError(string.Format(CultureInfo.CurrentCulture, ResourceStrings.Failed_ExecCommandError, message));
             }
         }
 
@@ -648,7 +719,7 @@ namespace Microsoft.MIDebugEngine
                     {
                         if (children[p].TryFindUint("numchild") > 0)
                         {
-                            var variable = new VariableInformation("[" + (p / 2).ToString() + "]", this);
+                            var variable = new VariableInformation("[" + (p / 2).ToString(CultureInfo.InvariantCulture) + "]", this);
                             variable.CountChildren = 2;
                             var first = new VariableInformation(children[p], variable, "first");
                             var second = new VariableInformation(children[p + 1], this, "second");
