@@ -33,6 +33,7 @@ namespace Microsoft.DebugEngineHost.VSCode
         private bool _conditionalBP;
         private bool _functionBP;
         private bool _clipboardContext;
+        private bool _dataBP;
 
         // NOTE: CoreCLR doesn't support providing a code base when loading assemblies. So all debug engines
         // must be placed in the directory of OpenDebugAD7.exe
@@ -72,6 +73,12 @@ namespace Microsoft.DebugEngineHost.VSCode
         { 
             get { return _clipboardContext; } 
             set { SetProperty(out _clipboardContext, value); }
+        }
+
+        public bool DataBP
+        {
+            get { return _dataBP; }
+            set { SetProperty(out _dataBP, value); }
         }
 
 
@@ -138,6 +145,8 @@ namespace Microsoft.DebugEngineHost.VSCode
         /// </summary>
         public object LoadEngine()
         {
+            AssemblyResolver.Initialize();
+
             AssemblyName assemblyName = new System.Reflection.AssemblyName(this.EngineAssemblyName);
             Assembly engineAssembly = Assembly.Load(assemblyName);
             Type engineClass = engineAssembly.GetType(this.EngineClassName);

@@ -4,6 +4,7 @@
 using Microsoft.DebugEngineHost.VSCode;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DebugEngineHost
 {
@@ -75,20 +76,6 @@ namespace Microsoft.DebugEngineHost
             }
         }
 
-        public static IDebugCodeContext2 GetCodeContextForIntPtr(IntPtr codeContextId)
-        {
-            lock (s_codeContexts)
-            {
-                IDebugCodeContext2 codeContext;
-                if (!s_codeContexts.TryGet(codeContextId.ToInt32(), out codeContext))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(codeContextId));
-                }
-
-                return codeContext;
-            }
-        }
-
         public static IDebugDocumentPosition2 GetDocumentPositionForIntPtr(IntPtr documentPositionId)
         {
             lock (s_documentPositions)
@@ -124,7 +111,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns></returns>
         public static string GetDataBreakpointStringForIntPtr(IntPtr stringId)
         {
-            throw new NotImplementedException();
+            return Marshal.PtrToStringBSTR(stringId);
         }
 
         /// <summary>
@@ -134,7 +121,7 @@ namespace Microsoft.DebugEngineHost
         /// <returns>IntPtr to a BSTR which can be returned to VS.</returns>
         public static IntPtr GetIntPtrForDataBreakpointAddress(string address)
         {
-            throw new NotImplementedException();
+            return Marshal.StringToBSTR(address);
         }
 
         /// <summary>
@@ -145,7 +132,16 @@ namespace Microsoft.DebugEngineHost
         /// <returns>code context object</returns>
         public static IDebugCodeContext2 GetDebugCodeContextForIntPtr(IntPtr contextId)
         {
-            throw new NotImplementedException();
+            lock (s_codeContexts)
+            {
+                IDebugCodeContext2 codeContext;
+                if (!s_codeContexts.TryGet(contextId.ToInt32(), out codeContext))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(contextId));
+                }
+
+                return codeContext;
+            }
         }
 
         public static IDebugEventCallback2 GetThreadSafeEventCallback(IDebugEventCallback2 ad7Callback)

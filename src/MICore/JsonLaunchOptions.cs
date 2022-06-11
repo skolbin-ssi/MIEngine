@@ -73,6 +73,12 @@ namespace MICore.Json.LaunchOptions
         public string MiDebuggerServerAddress { get; set; }
 
         /// <summary>
+        /// If true, use gdb extended-remote mode to connect to gdbserver.
+        /// </summary>
+        [JsonProperty("useExtendedRemote", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool? UseExtendedRemote { get; set; }
+
+        /// <summary>
         /// Optional source file mappings passed to the debug engine. Example: '{ "/original/source/path":"/current/source/path" }'
         /// </summary>
         [JsonProperty("sourceFileMap", DefaultValueHandling = DefaultValueHandling.Ignore)]
@@ -95,6 +101,18 @@ namespace MICore.Json.LaunchOptions
         /// </summary>
         [JsonProperty("setupCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public List<SetupCommand> SetupCommands { get; protected set; }
+
+        /// <summary>
+        /// One or more commands to execute in order to setup underlying debugger after debugger has been attached. i.e. flashing and resetting the board
+        /// </summary>
+        [JsonProperty("postRemoteConnectCommands", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public List<SetupCommand> PostRemoteConnectCommands { get; protected set; }
+
+        /// <summary>
+        /// Explicitly control whether hardware breakpoints are used. If an optional limit is provided, additionally restrict the number of hardware breakpoints for remote targets. Example: "hardwareBreakpoints": { "require": true, "limit": 5 }.
+        /// </summary>
+        [JsonProperty("hardwareBreakpoints", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public HardwareBreakpointInfo HardwareBreakpointInfo { get; set; }
     }
 
     public partial class AttachOptions : BaseOptions
@@ -125,6 +143,8 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            bool? useExtendedRemote = null,
+            HardwareBreakpointInfo hardwareBreakpointInfo = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
             SymbolLoadInfo symbolLoadInfo = null)
@@ -139,7 +159,9 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerPath = miDebuggerPath;
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
+            this.UseExtendedRemote = useExtendedRemote;
             this.ProcessId = processId;
+            this.HardwareBreakpointInfo = hardwareBreakpointInfo;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.SymbolLoadInfo = symbolLoadInfo;
@@ -205,6 +227,39 @@ namespace MICore.Json.LaunchOptions
         {
             this.LoadAll = loadAll;
             this.ExceptionList = exceptionList;
+        }
+
+        #endregion
+    }
+
+    public partial class HardwareBreakpointInfo
+    {
+        #region Public Properties for Serialization
+
+        /// <summary>
+        /// If true, always use hardware breakpoints. Default value is false.
+        /// </summary>
+        [JsonProperty("require")]
+        public bool Require { get; set; }
+
+        /// <summary>
+        /// When <see cref="Require"/> is true, restrict the number of available hardware breakpoints. Default is 0, in which case there is no limit. This setting is only enforced with remote GDB targets.
+        /// </summary>
+        [JsonProperty("limit", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public int? Limit { get; set; }
+
+        #endregion
+
+        #region Constructors
+
+        public HardwareBreakpointInfo()
+        {
+        }
+
+        public HardwareBreakpointInfo(bool require = false, int? limit = null)
+        {
+            this.Require = require;
+            this.Limit = limit;
         }
 
         #endregion
@@ -319,6 +374,7 @@ namespace MICore.Json.LaunchOptions
         {
             this.Args = new List<string>();
             this.SetupCommands = new List<SetupCommand>();
+            this.PostRemoteConnectCommands = new List<SetupCommand>();
             this.CustomLaunchSetupCommands = new List<SetupCommand>();
             this.Environment = new List<Environment>();
             this.SourceFileMap = new Dictionary<string, object>();
@@ -331,6 +387,7 @@ namespace MICore.Json.LaunchOptions
             string targetArchitecture = null,
             string cwd = null,
             List<SetupCommand> setupCommands = null,
+            List<SetupCommand> postRemoteConnectCommands = null,
             List<SetupCommand> customLaunchSetupCommands = null,
             LaunchCompleteCommand? launchCompleteCommand = null,
             string visualizerFile = null,
@@ -341,6 +398,7 @@ namespace MICore.Json.LaunchOptions
             string miDebuggerPath = null,
             string miDebuggerArgs = null,
             string miDebuggerServerAddress = null,
+            bool? useExtendedRemote = null,
             bool? stopAtEntry = null,
             string debugServerPath = null,
             string debugServerArgs = null,
@@ -350,6 +408,7 @@ namespace MICore.Json.LaunchOptions
             int? serverLaunchTimeout = null,
             string coreDumpPath = null,
             bool? externalConsole = null,
+            HardwareBreakpointInfo hardwareBreakpointInfo = null,
             Dictionary<string, object> sourceFileMap = null,
             PipeTransport pipeTransport = null,
             bool? stopAtConnect = null)
@@ -360,6 +419,7 @@ namespace MICore.Json.LaunchOptions
             this.TargetArchitecture = targetArchitecture;
             this.Cwd = cwd;
             this.SetupCommands = setupCommands;
+            this.PostRemoteConnectCommands = postRemoteConnectCommands;
             this.CustomLaunchSetupCommands = customLaunchSetupCommands;
             this.LaunchCompleteCommand = launchCompleteCommand;
             this.VisualizerFile = visualizerFile;
@@ -370,6 +430,7 @@ namespace MICore.Json.LaunchOptions
             this.MiDebuggerPath = miDebuggerPath;
             this.MiDebuggerArgs = miDebuggerArgs;
             this.MiDebuggerServerAddress = miDebuggerServerAddress;
+            this.UseExtendedRemote = useExtendedRemote;
             this.StopAtEntry = stopAtEntry;
             this.DebugServerPath = debugServerPath;
             this.DebugServerArgs = debugServerArgs;
@@ -379,6 +440,7 @@ namespace MICore.Json.LaunchOptions
             this.ServerLaunchTimeout = serverLaunchTimeout;
             this.CoreDumpPath = coreDumpPath;
             this.ExternalConsole = externalConsole;
+            this.HardwareBreakpointInfo = hardwareBreakpointInfo;
             this.SourceFileMap = sourceFileMap;
             this.PipeTransport = pipeTransport;
             this.StopAtConnect = stopAtConnect;

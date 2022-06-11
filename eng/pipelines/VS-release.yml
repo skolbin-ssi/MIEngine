@@ -1,8 +1,12 @@
 ---
 name: $(Date:yyyMMdd).$(Rev:r)
+variables:
+  - group: TSDTUSR
 jobs:
-- template: ./jobs/VSEng-MicroBuildVS2019.yml
+- template: ./jobs/VSEngSS-MicroBuild2022-1ES.job.yml
   parameters:
-    JobName: VS_Release
-    BuildTemplate: 'VS-release'
+    DisplayName: 'VS_Release'
+    JobTemplate:
+    - template: ../templates/VS-release.template.yml
+
 ...

@@ -19,7 +19,7 @@ namespace OpenDebugAD7 {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class AD7Resources {
@@ -61,6 +61,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to When &apos;{0}&apos; changes ({1} bytes).
+        /// </summary>
+        internal static string DataBreakpointDisplayString {
+            get {
+                return ResourceManager.GetString("DataBreakpointDisplayString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Execute debugger commands using &quot;-exec &lt;command&gt;&quot;, for example &quot;-exec info registers&quot; will list registers in use (when GDB is the debugger).
         /// </summary>
         internal static string DebugConsoleStartMessage {
@@ -75,6 +84,15 @@ namespace OpenDebugAD7 {
         internal static string DebuggerDisconnectMessage {
             get {
                 return ResourceManager.GetString("DebuggerDisconnectMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to find child property..
+        /// </summary>
+        internal static string Error_ChildPropertyNotFound {
+            get {
+                return ResourceManager.GetString("Error_ChildPropertyNotFound", resourceCulture);
             }
         }
         
@@ -108,11 +126,29 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to get info for data breakpoint. {0}.
+        /// </summary>
+        internal static string Error_DataBreakpointInfoFail {
+            get {
+                return ResourceManager.GetString("Error_DataBreakpointInfoFail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exception occurred: &apos;{0}&apos;.
         /// </summary>
         internal static string Error_ExceptionOccured {
             get {
                 return ResourceManager.GetString("Error_ExceptionOccured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is not a supported exception filter..
+        /// </summary>
+        internal static string Error_FilterOption_Not_Supported {
+            get {
+                return ResourceManager.GetString("Error_FilterOption_Not_Supported", resourceCulture);
             }
         }
         
@@ -198,6 +234,33 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ERROR: &apos;{0}&apos; is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information..
+        /// </summary>
+        internal static string Error_Invalid_Exception_Condition {
+            get {
+                return ResourceManager.GetString("Error_Invalid_Exception_Condition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to set data breakpoint: {0}.
+        /// </summary>
+        internal static string Error_InvalidDataBreakpoint {
+            get {
+                return ResourceManager.GetString("Error_InvalidDataBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot evaluate expression on the specified stack frame..
+        /// </summary>
+        internal static string Error_InvalidStackFrameOnEvaluateExpression {
+            get {
+                return ResourceManager.GetString("Error_InvalidStackFrameOnEvaluateExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DNX runtime process exited unexpectedly with error code {0}..
         /// </summary>
         internal static string Error_LaunchFailedNoError {
@@ -223,6 +286,15 @@ namespace OpenDebugAD7 {
         internal static string Error_MissingOutParam {
             get {
                 return ResourceManager.GetString("Error_MissingOutParam", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to get parent object: No scope or variable found..
+        /// </summary>
+        internal static string Error_NoParentObject {
+            get {
+                return ResourceManager.GetString("Error_NoParentObject", resourceCulture);
             }
         }
         
@@ -344,6 +416,15 @@ namespace OpenDebugAD7 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to set expression &apos;{0}&apos; to value &apos;{1}&apos;.
+        /// </summary>
+        internal static string Error_SetExpression {
+            get {
+                return ResourceManager.GetString("Error_SetExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not set variable.
         /// </summary>
         internal static string Error_SetVariableFailed {
@@ -403,6 +484,15 @@ namespace OpenDebugAD7 {
         internal static string Error_UnableToSetBreakpoint {
             get {
                 return ResourceManager.GetString("Error_UnableToSetBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error setting instruction breakpoint: {0}.
+        /// </summary>
+        internal static string Error_UnableToSetInstructionBreakpoint {
+            get {
+                return ResourceManager.GetString("Error_UnableToSetInstructionBreakpoint", resourceCulture);
             }
         }
         

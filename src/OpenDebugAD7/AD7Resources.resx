@@ -301,4 +301,41 @@
   <data name="Error_NotImplementedSetNextStatement" xml:space="preserve">
     <value>Set next statement is not supported by the current debugger.</value>
   </data>
+  <data name="Error_UnableToSetInstructionBreakpoint" xml:space="preserve">
+    <value>Error setting instruction breakpoint: {0}</value>
+  </data>
+  <data name="Error_FilterOption_Not_Supported" xml:space="preserve">
+    <value>'{0}' is not a supported exception filter.</value>
+    <comment>{0} is the name of the exception filter.</comment>
+  </data>
+  <data name="Error_Invalid_Exception_Condition" xml:space="preserve">
+    <value>ERROR: '{0}' is an invalid exception condition. See https://aka.ms/VSCode-Cpp-ExceptionSettings for more information.</value>
+    <comment>{0} is the exception condition</comment>
+  </data>
+  <data name="Error_DataBreakpointInfoFail" xml:space="preserve">
+    <value>Unable to get info for data breakpoint. {0}</value>
+    <comment>{0} is the reason (could be exception condition)</comment>
+  </data>
+  <data name="Error_NoParentObject" xml:space="preserve">
+    <value>Unable to get parent object: No scope or variable found.</value>
+    <comment>{0} is a number, {1} is the property name</comment>
+  </data>
+  <data name="DataBreakpointDisplayString" xml:space="preserve">
+    <value>When '{0}' changes ({1} bytes)</value>
+    <comment>{0} is the variable name, {1} is a number (size of the variable)</comment>
+  </data>
+  <data name="Error_ChildPropertyNotFound" xml:space="preserve">
+    <value>Unable to find child property.</value>
+  </data>
+  <data name="Error_InvalidDataBreakpoint" xml:space="preserve">
+    <value>Unable to set data breakpoint: {0}</value>
+    <comment>{0} is the reason</comment>
+  </data>
+  <data name="Error_SetExpression" xml:space="preserve">
+    <value>Unable to set expression '{0}' to value '{1}'</value>
+    <comment>{0} is the expression, {1} is the value the user wants to set.</comment>
+  </data>
+  <data name="Error_InvalidStackFrameOnEvaluateExpression" xml:space="preserve">
+    <value>Cannot evaluate expression on the specified stack frame.</value>
+  </data>
 </root>

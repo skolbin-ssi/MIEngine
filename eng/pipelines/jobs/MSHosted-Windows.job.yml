@@ -1,0 +1,16 @@
+---
+parameters:
+- name: DisplayName
+  type: string
+- name: JobTemplate
+  type: object
+
+jobs:
+- job:
+  displayName: ${{ parameters.DisplayName }}
+  timeoutInMinutes: 360
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+  - ${{ parameters.JobTemplate }}
+...

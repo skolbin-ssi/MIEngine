@@ -253,4 +253,41 @@ See https://aka.ms/miengine-gdb-troubleshooting for details.</value>
   <data name="DebuggingWillAbort" xml:space="preserve">
     <value>Debugging will now abort.</value>
   </data>
+  <data name="Warning_UncheckedExceptionsInCheckedCategory" xml:space="preserve">
+    <value>Warning: One or more C++ exceptions are unchecked while '&lt;All C++ Exceptions not in this list&gt;' is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions.
+</value>
+    <comment>S</comment>
+  </data>
+  <data name="Warning_ExceptionsNotSupported" xml:space="preserve">
+    <value>Warning: Exceptions are not supported in this scenario.
+</value>
+  </data>
+  <data name="Exception_Thrown" xml:space="preserve">
+    <value>Exception{0} thrown at 0x{1:X}.</value>
+    <comment>0 = optional exception name, 1 = address</comment>
+  </data>
+  <data name="Exception_Thrown_with_Source" xml:space="preserve">
+    <value>Exception{0} thrown at 0x{1:X} in {2}.</value>
+    <comment>0 = optional exception name, 1 = address, 2 = exception file</comment>
+  </data>
+  <data name="UnknownBreakpoint" xml:space="preserve">
+    <value>Hit breakpoint {0} at 0x{1:x}.</value>
+    <comment>0 = breakpoint number, 1 = address</comment>
+  </data>
+  <data name="UnknownWatchpoint" xml:space="preserve">
+    <value>Hit watchpoint {0} at 0x{1:x}.</value>
+    <comment>0 = watchpoint number, 1 = address</comment>
+  </data>
+  <data name="UnknownWatchpointWithExpression" xml:space="preserve">
+    <value>Hit watchpoint {0}: {1} at 0x{2:x}.</value>
+    <comment>0 = watchpoint number, 1 = expression, 2 = address</comment>
+  </data>
+  <data name="UnknownWatchpointOldValue" xml:space="preserve">
+    <value>Old value = {0}</value>
+    <comment>0 = old value of watchpoint</comment>
+  </data>
+  <data name="UnknownWatchpointNewValue" xml:space="preserve">
+    <value>New value = {0}</value>
+    <comment>0 = new value of watchpoint</comment>
+  </data>
 </root>

@@ -23,8 +23,18 @@ namespace OpenDebugAD7.AD7Impl
 
         public AD7FunctionPosition FunctionPosition { get; private set; }
 
+        public IDebugMemoryContext2 MemoryContext {  get; private set; }
+
+        public string DataAddress { get; private set; }
+        public uint DataSize { get; private set; }
+
+        // Used for Releasing the MemoryContext.
+        // Caller of AD7BreakPointRequest(MemoryContext) is required to
+        // release it with HostMarshal.ReleaseCodeContextId
+        public IntPtr MemoryContextIntPtr { get; private set;  }
+
         // Unique identifier for breakpoint when communicating with VSCode
-        public uint Id { get; private set; }
+        public uint Id { get; } = GetNextBreakpointId();
 
         // Bind result from IDebugBreakpointErrorEvent2 or IDebugBreakpointBoundEvent2
         public Breakpoint BindResult { get; set; }
@@ -33,12 +43,23 @@ namespace OpenDebugAD7.AD7Impl
         {
             DocumentPosition = new AD7DocumentPosition(config, path, line);
             Condition = condition;
-            Id = GetNextBreakpointId();
         }
 
         public AD7BreakPointRequest(string functionName)
         {
             FunctionPosition = new AD7FunctionPosition(functionName);
+        }
+
+        // Data breakpoint constructor
+        public AD7BreakPointRequest(string address, uint size)
+        {
+            DataAddress = address;
+            DataSize = size;
+        }
+
+        public AD7BreakPointRequest(IDebugMemoryContext2 memoryContext)
+        {
+            MemoryContext = memoryContext;
         }
 
         public int GetLocationType(enum_BP_LOCATION_TYPE[] pBPLocationType)
@@ -51,7 +72,14 @@ namespace OpenDebugAD7.AD7Impl
             {
                 pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET;
             }
-
+            else if (MemoryContext != null)
+            {
+                pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
+            }
+            else if (DataAddress != null)
+            {
+                pBPLocationType[0] = enum_BP_LOCATION_TYPE.BPLT_DATA_STRING;
+            }
             return 0;
         }
 
@@ -70,6 +98,18 @@ namespace OpenDebugAD7.AD7Impl
                 {
                     pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FUNC_OFFSET;
                     pBPRequestInfo[0].bpLocation.unionmember2 = HostMarshal.RegisterFunctionPosition(FunctionPosition);
+                }
+                else if (MemoryContext != null)
+                {
+                    pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_CONTEXT;
+                    MemoryContextIntPtr = HostMarshal.RegisterCodeContext(MemoryContext as IDebugCodeContext2);
+                    pBPRequestInfo[0].bpLocation.unionmember1 = MemoryContextIntPtr;
+                }
+                else if (DataAddress != null)
+                {
+                    pBPRequestInfo[0].bpLocation.bpLocationType = (uint)enum_BP_LOCATION_TYPE.BPLT_DATA_STRING;
+                    pBPRequestInfo[0].bpLocation.unionmember3 = HostMarshal.GetIntPtrForDataBreakpointAddress(DataAddress);
+                    pBPRequestInfo[0].bpLocation.unionmember4 = (IntPtr)DataSize;
                 }
             }
             if ((dwFields & enum_BPREQI_FIELDS.BPREQI_CONDITION) != 0 && !string.IsNullOrWhiteSpace(Condition))

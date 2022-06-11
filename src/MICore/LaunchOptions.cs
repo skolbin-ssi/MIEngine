@@ -443,6 +443,18 @@ namespace MICore
             this.MIDebuggerArgs = MIDebuggerArgs;
         }
 
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, bool UseExtendedRemote) :
+            this(MIDebuggerPath, MIDebuggerServerAddress)
+        {
+            this.UseExtendedRemote = UseExtendedRemote;
+        }
+
+        public LocalLaunchOptions(string MIDebuggerPath, string MIDebuggerServerAddress, string MIDebuggerArgs, bool UseExtendedRemote) :
+            this(MIDebuggerPath, MIDebuggerServerAddress, MIDebuggerArgs)
+        {
+            this.UseExtendedRemote = UseExtendedRemote;
+        }
+
         private void InitializeServerOptions(Json.LaunchOptions.LaunchOptions launchOptions)
         {
             if (!String.IsNullOrWhiteSpace(launchOptions.DebugServerPath))
@@ -533,7 +545,8 @@ namespace MICore
 
             LocalLaunchOptions localLaunchOptions = new LocalLaunchOptions(RequireAttribute(miDebuggerPath, nameof(miDebuggerPath)),
                 launchOptions.MiDebuggerServerAddress,
-                launchOptions.MiDebuggerArgs
+                launchOptions.MiDebuggerArgs,
+                launchOptions.UseExtendedRemote.GetValueOrDefault(false)
                 );
 
             // Load up common options
@@ -561,7 +574,8 @@ namespace MICore
             var options = new LocalLaunchOptions(
                 RequireAttribute(miDebuggerPath, "MIDebuggerPath"),
                 source.MIDebuggerServerAddress,
-                source.MIDebuggerArgs);
+                source.MIDebuggerArgs,
+                source.UseExtendedRemote);
             options.InitializeCommonOptions(source);
             options.InitializeServerOptions(source);
             options._useExternalConsole = source.ExternalConsole;
@@ -665,6 +679,11 @@ namespace MICore
         /// [Optional] Server address that MI Debugger server is listening to
         /// </summary>
         public string MIDebuggerServerAddress { get; private set; }
+
+        /// <summary>
+        /// [Optional] If true, use gdb extended-remote mode to connect to gdbserver.
+        /// </summary>
+        public bool UseExtendedRemote { get; private set; }
 
         /// <summary>
         /// [Optional] MI Debugger Server exe, if non-null then the MIEngine will start the debug server before starting the debugger
@@ -1060,6 +1079,24 @@ namespace MICore
             }
         }
 
+        private ReadOnlyCollection<LaunchCommand> _postRemoteConnectCommands;
+
+        /// <summary>
+        /// [Required] Additional commands used to setup debugging once the remote connection has been made. May be an empty collection
+        /// </summary>
+        public ReadOnlyCollection<LaunchCommand> PostRemoteConnectCommands
+        {
+            get { return _postRemoteConnectCommands; }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("PostRemoteConnectCommands");
+
+                VerifyCanModifyProperty(nameof(PostRemoteConnectCommands));
+                _postRemoteConnectCommands = value;
+            }
+        }
+
 
         private ReadOnlyCollection<LaunchCommand> _customLaunchSetupCommands;
 
@@ -1138,6 +1175,30 @@ namespace MICore
             {
                 VerifyCanModifyProperty(nameof(StopAtConnect));
                 _stopAtConnect = value;
+            }
+        }
+
+        private bool _requireHardwareBreakpoints = false;
+
+        public bool RequireHardwareBreakpoints
+        {
+            get { return _requireHardwareBreakpoints;  }
+            set
+            {
+                VerifyCanModifyProperty(nameof(RequireHardwareBreakpoints));
+                _requireHardwareBreakpoints = value;
+            }
+        }
+
+        private int _hardwareBreakpointLimit;
+
+        public int HardwareBreakpointLimit
+        {
+            get { return _hardwareBreakpointLimit; }
+            set
+            {
+                VerifyCanModifyProperty(nameof(HardwareBreakpointLimit));
+                _hardwareBreakpointLimit = value;
             }
         }
 
@@ -1392,6 +1453,7 @@ namespace MICore
 
             options.ProcessId = processId;
             options.SetupCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
+            options.PostRemoteConnectCommands = new ReadOnlyCollection<LaunchCommand>(new LaunchCommand[] { });
             if (attachOptions != null)
             {
                 options.Merge(attachOptions);
@@ -1729,7 +1791,15 @@ namespace MICore
             }
 
             this.SetupCommands = LaunchCommand.CreateCollection(options.SetupCommands);
+            this.PostRemoteConnectCommands = LaunchCommand.CreateCollection(options.PostRemoteConnectCommands);
 
+            this.RequireHardwareBreakpoints = options.HardwareBreakpointInfo?.Require ?? false;
+            this.HardwareBreakpointLimit = options.HardwareBreakpointInfo?.Limit ?? 0;
+
+            if (this.RequireHardwareBreakpoints && DebuggerMIMode == MIMode.Lldb)
+            {
+                throw new InvalidLaunchOptionsException(String.Format(CultureInfo.InvariantCulture, MICoreResources.Error_OptionNotSupported, nameof(options.HardwareBreakpointInfo.Require), nameof(MIMode.Lldb)));
+            }
         }
 
         protected void InitializeCommonOptions(Xml.LaunchOptions.BaseLaunchOptions source)

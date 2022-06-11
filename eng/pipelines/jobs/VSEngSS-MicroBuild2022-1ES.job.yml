@@ -1,0 +1,16 @@
+parameters:
+- name: DisplayName
+  type: string
+- name: JobTemplate
+  type: object
+
+jobs:
+- job:
+  displayName: ${{ parameters.DisplayName }}
+  pool:
+    name: VSEngSS-MicroBuild2022-1ES
+    demands:
+    - msbuild
+    - visualstudio
+  steps:
+  - ${{ parameters.JobTemplate }}

@@ -19,7 +19,7 @@ namespace Microsoft.MIDebugEngine {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class ResourceStrings {
@@ -154,6 +154,24 @@ namespace Microsoft.MIDebugEngine {
         internal static string ErrorReadingFile {
             get {
                 return ResourceManager.GetString("ErrorReadingFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception{0} thrown at 0x{1:X}..
+        /// </summary>
+        internal static string Exception_Thrown {
+            get {
+                return ResourceManager.GetString("Exception_Thrown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception{0} thrown at 0x{1:X} in {2}..
+        /// </summary>
+        internal static string Exception_Thrown_with_Source {
+            get {
+                return ResourceManager.GetString("Exception_Thrown_with_Source", resourceCulture);
             }
         }
         
@@ -338,11 +356,56 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hit breakpoint {0} at 0x{1:x}..
+        /// </summary>
+        internal static string UnknownBreakpoint {
+            get {
+                return ResourceManager.GetString("UnknownBreakpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [Unknown/Just-In-Time compiled code].
         /// </summary>
         internal static string UnknownCode {
             get {
                 return ResourceManager.GetString("UnknownCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit watchpoint {0} at 0x{1:x}..
+        /// </summary>
+        internal static string UnknownWatchpoint {
+            get {
+                return ResourceManager.GetString("UnknownWatchpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to New value = {0}.
+        /// </summary>
+        internal static string UnknownWatchpointNewValue {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointNewValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Old value = {0}.
+        /// </summary>
+        internal static string UnknownWatchpointOldValue {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointOldValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hit watchpoint {0}: {1} at 0x{2:x}..
+        /// </summary>
+        internal static string UnknownWatchpointWithExpression {
+            get {
+                return ResourceManager.GetString("UnknownWatchpointWithExpression", resourceCulture);
             }
         }
         
@@ -410,11 +473,31 @@ namespace Microsoft.MIDebugEngine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: Exceptions are not supported in this scenario.
+        ///.
+        /// </summary>
+        internal static string Warning_ExceptionsNotSupported {
+            get {
+                return ResourceManager.GetString("Warning_ExceptionsNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Source file &apos;{0}&apos; is newer than module file &apos;{1}&apos;..
         /// </summary>
         internal static string Warning_SourceFileOutOfDate_Arg2 {
             get {
                 return ResourceManager.GetString("Warning_SourceFileOutOfDate_Arg2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: One or more C++ exceptions are unchecked while &apos;&lt;All C++ Exceptions not in this list&gt;&apos; is enabled. This is unsupported for GDB and the debugger will break on all C++ exceptions.
+        ///.
+        /// </summary>
+        internal static string Warning_UncheckedExceptionsInCheckedCategory {
+            get {
+                return ResourceManager.GetString("Warning_UncheckedExceptionsInCheckedCategory", resourceCulture);
             }
         }
         
