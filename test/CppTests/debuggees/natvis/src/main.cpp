@@ -2,18 +2,24 @@
 #include "BinarySearchTree.h"
 #include "SimpleVector.h"
 #include "SimpleArray.h"
+#include "SimpleClass.h"
+#include "SimpleMatrix.h"
 
 class SimpleDisplayObject
 {
-    public:
-        SimpleDisplayObject(){}
+public:
+    SimpleDisplayObject() {}
 };
 
 int main(int argc, char** argv)
 {
     SimpleDisplayObject obj_1;
 
-    SimpleVector vec(10);
+    SimpleVector vec(2000);
+    for (int i = 0; i < 2000; i++)
+    {
+        vec.Set(i, i);
+    }
     vec.Set(5, 20);
 
     SimpleLinkedList ll;
@@ -31,11 +37,16 @@ int main(int argc, char** argv)
     map.Insert(4);
     map.Insert(-72);
 
-    SimpleArray arr(15);
-    for (int i = 0 ; i < 15; i++)
+    SimpleArray arr(52);
+    for (int i = 0; i < 52; i++)
     {
         arr[i] = i * i;
     }
+
+    SimpleClass* simpleClass = nullptr;
+    simpleClass = new SimpleClass();
+
+    SimpleMatrix matrix(2, 256);
 
     return 0;
 }

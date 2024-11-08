@@ -38,8 +38,6 @@
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="17.0.0-previews-1-31410-258" />
 
-    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
-
     <PackageReference Include="Microsoft.VisualStudio.Debugger.Interop.16.0" Version="$(Microsoft_VisualStudio_Debugger_Interop_16_0_Version)">
       <IncludeAssets>compile</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -55,6 +53,13 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="$(Microsoft_VSSDK_BuildTools_Version)" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(Microsoft_VisualStudioEng_MicroBuild_Core_Version)" GeneratePathProperty="true" />
+
+    <PackageReference Include="Microsoft.IO.Redist" Version="$(Microsoft_IO_Redist_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json" Version="$(System_Text_Json_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -214,6 +219,11 @@
       <Project>{78728205-db3e-4b7b-a7d2-5cbe38e9c607}</Project>
       <Name>JDbg</Name>
     </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageNuspec Include="$(MIEngineRoot)\MIEngine.mdd.nuspec" />
+    <NugetPackages Include="VS.Redist.Debugger.MDD.MIEngine" />
   </ItemGroup>
 
   <Import Sdk="Microsoft.NET.Sdk" Project="Sdk.targets" />

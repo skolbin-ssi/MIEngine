@@ -128,8 +128,38 @@ namespace OpenDebugAD7
             m_dataBreakpoints = new Dictionary<string, IDebugPendingBreakpoint2>();
             m_exceptionBreakpoints = new List<string>();
             m_variableManager = new VariableManager();
+
+            //Register sendInvalidate request
+            Protocol.RegisterRequestType<SendInvalidateRequest, SendInvalidateArguments>(r => this.HandleSendInvalidateRequestAsync(r));
+    
         }
 
+        private void HandleSendInvalidateRequestAsync(IRequestResponder<SendInvalidateArguments> responder)
+        {
+            InvalidatedEvent invalidated = new InvalidatedEvent();
+            // Set the Arguments only if passed
+            if (null != responder.Arguments) {
+                // Setting the Areas if passed
+                if (null != responder.Arguments.Areas) {
+                    invalidated.Areas = responder.Arguments.Areas;
+                }
+
+                // Setting the StackFrameId if passed (and the 'threadId' is ignored).
+                if (null != responder.Arguments.StackFrameId)
+                {
+                    invalidated.StackFrameId = responder.Arguments.StackFrameId;
+                }
+
+                // Setting the ThreadId if passed
+                else if (null != responder.Arguments.ThreadId)
+                {
+                    invalidated.ThreadId = responder.Arguments.ThreadId;
+                }
+            }
+
+            Protocol.SendEvent(invalidated);
+
+        }
         #endregion
 
         #region Utility
@@ -215,17 +245,38 @@ namespace OpenDebugAD7
 
             if (logging != null)
             {
+                HostLogger.Reset();
+
                 m_logger.SetLoggingConfiguration(LoggingCategory.Exception, logging.GetValueAsBool("exceptions").GetValueOrDefault(true));
                 m_logger.SetLoggingConfiguration(LoggingCategory.Module, logging.GetValueAsBool("moduleLoad").GetValueOrDefault(true));
                 m_logger.SetLoggingConfiguration(LoggingCategory.StdOut, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
                 m_logger.SetLoggingConfiguration(LoggingCategory.StdErr, logging.GetValueAsBool("programOutput").GetValueOrDefault(true));
 
-                bool? engineLogging = logging.GetValueAsBool("engineLogging");
-                if (engineLogging.HasValue)
+                JToken engineLogging = logging.GetValue("engineLogging", StringComparison.OrdinalIgnoreCase);
+                if (engineLogging != null)
                 {
-                    m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, engineLogging.Value);
-                    HostLogger.EnableHostLogging();
-                    HostLogger.Instance.LogCallback = s => m_logger.WriteLine(LoggingCategory.EngineLogging, s);
+                    if (engineLogging.Type == JTokenType.Boolean)
+                    {
+                        bool engineLoggingBool = engineLogging.Value<bool>();
+                        if (engineLoggingBool)
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), LogLevel.Verbose);
+                        }
+                    }
+                    else if (engineLogging.Type == JTokenType.String)
+                    {
+                        string engineLoggingString = engineLogging.Value<string>();
+                        if (Enum.TryParse(engineLoggingString, ignoreCase: true, out LogLevel level))
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.EngineLogging, true);
+                            HostLogger.EnableHostLogging((message) => m_logger.WriteLine(LoggingCategory.EngineLogging, message), level);
+                        }
+                    }
+                    else
+                    {
+                        m_logger.WriteLine(LoggingCategory.EngineLogging, string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_EngineLoggingParse, engineLogging.ToString()));
+                    }
                 }
 
                 bool? trace = logging.GetValueAsBool("trace");
@@ -238,6 +289,33 @@ namespace OpenDebugAD7
                 if (traceResponse.HasValue)
                 {
                     m_logger.SetLoggingConfiguration(LoggingCategory.AdapterResponse, traceResponse.Value);
+                }
+
+                JToken natvisDiagnostics = logging.GetValue("natvisDiagnostics", StringComparison.OrdinalIgnoreCase);
+                if (natvisDiagnostics != null)
+                {
+                    if (natvisDiagnostics.Type == JTokenType.Boolean)
+                    {
+                        bool natvisDiagnosticsBool = natvisDiagnostics.Value<bool>();
+                        if (natvisDiagnosticsBool)
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
+                            HostLogger.EnableNatvisDiagnostics((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, message), LogLevel.Verbose);
+                        }
+                    }
+                    else if (natvisDiagnostics.Type == JTokenType.String)
+                    {
+                        string natvisDiagnosticsString = natvisDiagnostics.Value<string>();
+                        if (Enum.TryParse(natvisDiagnosticsString, ignoreCase: true, out LogLevel level))
+                        {
+                            m_logger.SetLoggingConfiguration(LoggingCategory.NatvisDiagnostics, true);
+                            HostLogger.EnableNatvisDiagnostics((message) => m_logger.WriteLine(LoggingCategory.NatvisDiagnostics, string.Concat("[Natvis] ", message)), level);
+                        }
+                    }
+                    else
+                    {
+                        m_logger.WriteLine(LoggingCategory.EngineLogging, string.Format(CultureInfo.CurrentCulture, AD7Resources.Warning_NatvisLoggingParse, natvisDiagnostics.ToString()));
+                    }
                 }
             }
         }
@@ -811,7 +889,6 @@ namespace OpenDebugAD7
                 }
             }
 
-            BeforeContinue();
             ErrorBuilder builder = new ErrorBuilder(() => errorMessage);
             m_isStepping = true;
 
@@ -837,6 +914,10 @@ namespace OpenDebugAD7
                 m_isStopped = true;
                 throw;
             }
+            // The program should now be stepping, so it is safe to discard the
+            // cached program state.
+            BeforeContinue();
+            m_isStepping = true;
         }
 
         private enum ClientId
@@ -2675,7 +2756,7 @@ namespace OpenDebugAD7
         }
 
 
-        protected override void HandleSetExceptionBreakpointsRequestAsync(IRequestResponder<SetExceptionBreakpointsArguments> responder)
+        protected override void HandleSetExceptionBreakpointsRequestAsync(IRequestResponder<SetExceptionBreakpointsArguments, SetExceptionBreakpointsResponse> responder)
         {
             HashSet<Guid> activeExceptionCategories = new HashSet<Guid>();
 
@@ -2929,6 +3010,8 @@ namespace OpenDebugAD7
 
         protected override void HandleEvaluateRequestAsync(IRequestResponder<EvaluateArguments, EvaluateResponse> responder)
         {
+            try
+            {
             EvaluateArguments.ContextValue context = responder.Arguments.Context.GetValueOrDefault(EvaluateArguments.ContextValue.Unknown);
             int frameId = responder.Arguments.FrameId.GetValueOrDefault(-1);
             string expression = responder.Arguments.Expression;
@@ -3015,6 +3098,13 @@ namespace OpenDebugAD7
                 VariablesReference = variable.VariablesReference,
                 MemoryReference = memoryReference
             });
+
+            }
+            catch (Exception e)
+            {
+                responder.SetError(new ProtocolException(e.Message));
+                return;
+            }
         }
 
         protected override void HandleReadMemoryRequestAsync(IRequestResponder<ReadMemoryArguments, ReadMemoryResponse> responder)
@@ -3813,5 +3903,22 @@ namespace OpenDebugAD7
                 throw new NotImplementedException();
             }
         }
+    }
+
+    internal class SendInvalidateRequest : DebugRequest<SendInvalidateArguments>
+    {
+ 
+        public SendInvalidateRequest(): base("sendInvalidate")
+        {
+        }
+    }
+
+    internal class SendInvalidateArguments : DebugRequestArguments
+    {
+
+        public List<InvalidatedAreas> Areas { get; set; }
+        public int? ThreadId { get; set; }
+        public int? StackFrameId { get; set; }
+
     }
 }

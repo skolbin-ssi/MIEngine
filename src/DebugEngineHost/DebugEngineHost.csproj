@@ -29,6 +29,8 @@
   <ItemGroup Label="Compile Shared Interfaces">
     <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.DAP.cs" />
     <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Stub\Shared\Microsoft.VisualStudio.Debugger.Interop.MI.cs" />
+
+    <Compile Include="$(MIEngineRoot)\src\DebugEngineHost.Common\HostLogChannel.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +49,19 @@
   </ItemGroup>
 
   <Import Project="..\..\build\Debugger.PIAs.NonPortable.Packages.settings.targets" />
+
+  
+  <!-- 
+    This ItemGroup is to override the packages that being depended on for the PackageReferences above. 
+    The issue is that Microsoft.VisualStudio.Shell.Framework v17.2.32505.113 -> 
+                      Microsoft.ServiceHub.[Client|Framework] ->
+                      StreamJsonRpc v2.7.70 ->
+                      Newtonsoft.Json v12.0.2
+    Delete this explicit override when we update 'Microsoft_VisualStudio_Shell_Framework_Version' away from v17.2.32505.113
+  -->
+  <ItemGroup Label="Component Governance Override"> 
+    <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_Version)" />
+  </ItemGroup>
 
   <ItemGroup Label="NuGet Packages">
     <PackageReference Include="Microsoft.VisualStudio.Shell.15.0" Version="$(Microsoft_VisualStudio_Shell_15_0_Version)">
@@ -74,7 +89,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
 
-    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.0.16-alpha" />
+    <PackageReference Include="Microsoft.IO.Redist" Version="$(Microsoft_IO_Redist_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Text.Json" Version="$(System_Text_Json_Version)">
+      <ExcludeAssets>all</ExcludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="Assembly to Generate">

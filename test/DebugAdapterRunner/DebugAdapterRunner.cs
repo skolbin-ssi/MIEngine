@@ -49,10 +49,14 @@ namespace DebugAdapterRunner
         // The current thread id which is automatically updated when the tool receives a stopped event
         public int CurrentThreadId;
 
+        public DateTime StartTime { get; } = DateTime.Now;
+
         // Keep a trace of the debug adapter output if requested
         private StringBuilder _debugAdapterOutput = new StringBuilder();
 
         private IDictionary<string, CallbackRequestHandler> _callbackHandlers = new Dictionary<string, CallbackRequestHandler>();
+
+        private static readonly Encoding s_utf8NoBOM = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
         // Current list of responses received from the debug adapter
         public List<string> Responses { get; private set; }
@@ -153,7 +157,9 @@ namespace DebugAdapterRunner
             startInfo.CreateNoWindow = true;
             startInfo.RedirectStandardInput = true;
             startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;                
+            startInfo.RedirectStandardError = true;
+            startInfo.StandardOutputEncoding = s_utf8NoBOM;
+            startInfo.StandardInputEncoding = s_utf8NoBOM;
 
             if (redirectVSAssert)
             {

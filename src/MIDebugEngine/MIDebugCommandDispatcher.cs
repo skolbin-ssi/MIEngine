@@ -4,6 +4,7 @@
 using MICore;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace Microsoft.MIDebugEngine
     {
         private readonly static List<DebuggedProcess> s_processes = new List<DebuggedProcess>();
 
-        public static Task<string> ExecuteCommand(string command)
+        private static DebuggedProcess GetLastProcess()
         {
             DebuggedProcess lastProcess;
             lock (s_processes)
@@ -26,7 +27,40 @@ namespace Microsoft.MIDebugEngine
 
                 lastProcess = s_processes[s_processes.Count - 1];
             }
-            return ExecuteCommand(command, lastProcess);
+
+            if (lastProcess == null)
+            {
+                throw new InvalidOperationException(MICoreResources.Error_NoMIDebuggerProcess);
+            }
+
+            return lastProcess;
+        }
+
+        public static MICore.ProcessState GetProcessState()
+        {
+            return GetLastProcess().ProcessState;
+        }
+
+        public static async Task<Results> ExecuteMICommandWithResultsObject(string command)
+        {
+            if (string.IsNullOrWhiteSpace(command))
+                throw new ArgumentNullException(nameof(command));
+
+            command = command.Trim();
+
+            if (command[0] == '-')
+            {
+                return await GetLastProcess().CmdAsync(command, ResultClass.None);
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(command));
+            }
+        }
+
+        public static Task<string> ExecuteCommand(string command)
+        {
+            return ExecuteCommand(command, GetLastProcess());
         }
 
         internal static Task<string> ExecuteCommand(string command, DebuggedProcess process, bool ignoreFailures = false)
@@ -89,6 +123,23 @@ namespace Microsoft.MIDebugEngine
 
         public static void EnableLogging(bool output, string logFile)
         {
+            if (!string.IsNullOrEmpty(logFile))
+            {
+                string tempDirectory = Path.GetTempPath();
+                if (Path.IsPathRooted(logFile) || (!string.IsNullOrEmpty(tempDirectory) && Directory.Exists(tempDirectory)))
+                {
+                    string filePath = Path.Combine(tempDirectory, logFile);
+
+                    File.CreateText(filePath).Dispose(); // Test to see if we can create a text file in HostLogChannel. This will allow the error to be shown when enabling the setting.
+
+                    logFile = filePath;
+                }
+                else
+                {
+                    throw new ArgumentOutOfRangeException(nameof(logFile));
+                }
+            }
+
             Logger.CmdLogInfo.logFile = logFile;
             if (output)
                 Logger.CmdLogInfo.logToOutput = WriteLogToOutput;

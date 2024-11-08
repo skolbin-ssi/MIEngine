@@ -5,6 +5,11 @@
    <DisplayString>Hello DisplayString</DisplayString>
   </Type>
 
+  <Type Name="SimpleClass">
+   <DisplayString Condition="this == 0">Null Class</DisplayString>
+   <DisplayString Condition="this != 0">Non-null Class</DisplayString>
+  </Type>
+
   <Type Name="SimpleVector">
    <DisplayString>{{ size={_size} }}</DisplayString>
    <Expand>
@@ -51,5 +56,17 @@
       <ValueNode>data</ValueNode>
     </TreeItems>
    </Expand>
+  </Type>
+
+  <Type Name="SimpleMatrix">
+    <DisplayString>SimpleMatrix</DisplayString>
+    <Expand>
+      <ArrayItems>
+        <Direction>Forward</Direction>
+        <Rank>2</Rank>
+        <Size>($i == 0) ? m_rows : m_cols</Size>
+        <ValuePointer>m_pData</ValuePointer>
+      </ArrayItems>
+    </Expand>
   </Type>
 </AutoVisualizer>

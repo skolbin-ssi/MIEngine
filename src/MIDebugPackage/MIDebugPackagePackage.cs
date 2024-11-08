@@ -403,21 +403,38 @@ namespace Microsoft.MIDebugPackage
         private void EnableLogging(bool sendToOutputWindow, string logFile)
         {
             ThreadHelper.ThrowIfNotOnUIThread();
-            try
+
+            IVsDebugger debugger = (IVsDebugger)GetService(typeof(IVsDebugger));
+            if (debugger != null)
             {
-                MIDebugCommandDispatcher.EnableLogging(sendToOutputWindow, logFile);
+                DBGMODE[] mode = new DBGMODE[] { DBGMODE.DBGMODE_Design };
+                int hr = debugger.GetMode(mode);
+
+                if (hr == VSConstants.S_OK && mode[0] != DBGMODE.DBGMODE_Design)
+                {
+                    throw new ArgumentException("Unable to update MIDebugLog while debugging.");
+                }
+
+                try
+                {
+                    MIDebugCommandDispatcher.EnableLogging(sendToOutputWindow, logFile);
+                }
+                catch (Exception e)
+                {
+                    var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
+                    if (commandWindow != null)
+                    {
+                        commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", e.Message));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Why is IVsCommandWindow null?");
+                    }
+                }
             }
-            catch (Exception e)
+            else
             {
-                var commandWindow = (IVsCommandWindow)GetService(typeof(SVsCommandWindow));
-                if (commandWindow != null)
-                {
-                    commandWindow.Print(string.Format(CultureInfo.CurrentCulture, "Error: {0}\r\n", e.Message));
-                }
-                else
-                {
-                    throw new InvalidOperationException("Why is IVsCommandWindow null?");
-                }
+                throw new InvalidOperationException("Why is IVsDebugger null?");
             }
         }
 

@@ -10,6 +10,7 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Globalization;
+using Microsoft.DebugEngineHost;
 
 namespace MICore
 {
@@ -47,7 +48,7 @@ namespace MICore
             return false;
         }
 
-        protected override async Task<Results> ThreadFrameCmdAsync(string command, ResultClass expectedResultClass, int threadId, uint frameLevel)
+        protected override async Task<Results> ThreadFrameCmdAsync(string command, string args, ResultClass expectedResultClass, int threadId, uint frameLevel)
         {
             // first aquire an exclusive lock. This is used as we don't want to fight with other commands that also require the current
             // thread to be set to a particular value
@@ -55,8 +56,20 @@ namespace MICore
 
             try
             {
-                await ThreadSelect(threadId, lockToken);
-                await StackSelectFrame(frameLevel, lockToken);
+
+                string threadFrameCommand;
+                // With source code of gdb 7.0.0, the --thread and --frame options were introduced and -thread-select and
+                // -stack-select-frame were deprecated
+                if (MajorVersion < 7)
+                {
+                    await ThreadSelect(threadId, lockToken);
+                    await StackSelectFrame(frameLevel, lockToken);
+                    threadFrameCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} {args}");
+                }
+                else
+                {
+                    threadFrameCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} --thread {threadId} --frame {frameLevel} {args}");
+                }
 
                 // Before we execute the provided command, we need to switch to a shared lock. This is because the provided
                 // command may be an expression evaluation command which could be long running, and we don't want to hold the
@@ -64,7 +77,7 @@ namespace MICore
                 lockToken.ConvertToSharedLock();
                 lockToken = null;
 
-                return await _debugger.CmdAsync(command, expectedResultClass);
+                return await _debugger.CmdAsync(threadFrameCommand, expectedResultClass);
             }
             finally
             {
@@ -81,7 +94,7 @@ namespace MICore
             }
         }
 
-        protected override async Task<Results> ThreadCmdAsync(string command, ResultClass expectedResultClass, int threadId)
+        protected override async Task<Results> ThreadCmdAsync(string command, string args, ResultClass expectedResultClass, int threadId)
         {
             // first aquire an exclusive lock. This is used as we don't want to fight with other commands that also require the current
             // thread to be set to a particular value
@@ -89,7 +102,18 @@ namespace MICore
 
             try
             {
-                await ThreadSelect(threadId, lockToken);
+                string threadCommand;
+                // With source code of gdb 7.0.0, the --thread option was introduced and -thread-select
+                // was deprecated
+                if (MajorVersion < 7)
+                {
+                    await ThreadSelect(threadId, lockToken);
+                    threadCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} {args}");
+                }
+                else
+                {
+                    threadCommand = string.Format(CultureInfo.InvariantCulture, $@"{command} --thread {threadId} {args}"); ;
+                }
 
                 // Before we execute the provided command, we need to switch to a shared lock. This is because the provided
                 // command may be an expression evaluation command which could be long running, and we don't want to hold the
@@ -97,7 +121,7 @@ namespace MICore
                 lockToken.ConvertToSharedLock();
                 lockToken = null;
 
-                return await _debugger.CmdAsync(command, expectedResultClass);
+                return await _debugger.CmdAsync(threadCommand, expectedResultClass);
             }
             finally
             {
@@ -197,6 +221,18 @@ namespace MICore
             }
         }
 
+        public override async Task<HashSet<string>> GetFeatures()
+        {
+            Results results = await _debugger.CmdAsync("-list-features", ResultClass.done);
+            return new HashSet<string>(results.Find<ValueListValue>("features").AsStrings);
+        }
+
+        public override async Task<bool> SupportsSimpleValuesExcludesRefTypes()
+        {
+            HashSet<string> features = await GetFeatures();
+            return features.Contains("simple-values-ref-types");
+        }
+
         public override async Task Terminate()
         {
             // Although the mi documentation states that the correct command to terminate is -exec-abort
@@ -288,17 +324,18 @@ namespace MICore
 
         public override async Task<string[]> AutoComplete(string command, int threadId, uint frameLevel)
         {
-            command = "-complete \"" + command + "\"";
+            string cmd = "-complete";
+            string args = $"\"{command}\"";
             Results res;
             if (threadId == -1)
-                res = await _debugger.CmdAsync(command, ResultClass.done);
+                res = await _debugger.CmdAsync($"{cmd} {args}", ResultClass.done);
             else
-                res = await ThreadFrameCmdAsync(command, ResultClass.done, threadId, frameLevel);
+                res = await ThreadFrameCmdAsync(cmd, args, ResultClass.done, threadId, frameLevel);
 
             var matchlist = res.Find<ValueListValue>("matches");
 
             if (int.Parse(res.FindString("max_completions_reached"), CultureInfo.InvariantCulture) != 0)
-                _debugger.Logger.WriteLine("We reached max-completions!");
+                _debugger.Logger.WriteLine(LogLevel.Verbose, "We reached max-completions!");
 
             return matchlist?.AsStrings;
         }
@@ -309,11 +346,11 @@ namespace MICore
             return new Guid[] { new Guid(CppExceptionCategoryString) };
         }
 
-        public override async Task<IEnumerable<ulong>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
+        public override async Task<IEnumerable<long>> SetExceptionBreakpoints(Guid exceptionCategory, IEnumerable<string> exceptionNames, ExceptionBreakpointStates exceptionBreakpointStates)
         {
             string command;
             Results result;
-            List<ulong> breakpointNumbers = new List<ulong>();
+            List<long> breakpointNumbers = new List<long>();
 
             if (exceptionNames == null) // set breakpoint for all exceptions in exceptionCategory
             {
@@ -352,9 +389,9 @@ namespace MICore
             return breakpointNumbers;
         }
 
-        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<ulong> exceptionBreakpoints)
+        public override async Task RemoveExceptionBreakpoint(Guid exceptionCategory, IEnumerable<long> exceptionBreakpoints)
         {
-            foreach (ulong breakpointNumber in exceptionBreakpoints)
+            foreach (long breakpointNumber in exceptionBreakpoints)
             {
                 await BreakDelete(breakpointNumber.ToString(CultureInfo.InvariantCulture));
             }

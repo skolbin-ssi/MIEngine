@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using MICore;
+using Microsoft.DebugEngineHost;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -136,7 +137,7 @@ namespace Microsoft.MIDebugEngine
             }
             catch (UnexpectedMIResultException)
             {
-                _debugger.Logger.WriteLine("Stack walk failed on thread: " + thread.TargetId);
+                _debugger.Logger.WriteLine(LogLevel.Error, "Stack walk failed on thread: " + thread.TargetId);
                 _stateChange = true;   // thread may have been deleted. Force a resync
             }
             lock (_threadList)
@@ -149,6 +150,9 @@ namespace Microsoft.MIDebugEngine
 
         internal async Task<ThreadContext> GetThreadContext(DebuggedThread thread)
         {
+            if (thread == null)
+                return null;
+
             lock (_threadList)
             {
                 if (_topContext.ContainsKey(thread.Id))
@@ -291,7 +295,7 @@ namespace Microsoft.MIDebugEngine
             TupleValue[] frameinfo = await _debugger.MICommandFactory.StackListFrames(thread.Id, 0, 1000);
             if (frameinfo == null)
             {
-                _debugger.Logger.WriteLine("Failed to get frame info");
+                _debugger.Logger.WriteLine(LogLevel.Error, "Failed to get frame info");
             }
             else
             {
